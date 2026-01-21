@@ -33,14 +33,19 @@ enum UiMode : uint8_t {
 volatile UiMode mode = MODE_RUN;
 
 // ----- Step pulse -----
+const uint8_t STEP_PULSE_HIGH_US = 3;  // DRV8825 min 1.9us
+const uint8_t STEP_PULSE_LOW_US = 3;   // DRV8825 min 1.9us
+
 inline void doStep() {
   digitalWrite(STEP_PIN, HIGH);
-  delayMicroseconds(4);
+  delayMicroseconds(STEP_PULSE_HIGH_US);
   digitalWrite(STEP_PIN, LOW);
+  delayMicroseconds(STEP_PULSE_LOW_US);
 }
 
-// Go-to speed control: smaller = faster
-const uint16_t MOVE_STEP_DELAY_US = 250;  // try 250, 200, 150, etc.
+// Go-to speed control: smaller = faster (but clamped for reliability)
+const uint16_t MOVE_STEP_DELAY_US = 800;  // slow, known-good
+const uint16_t MIN_MOVE_STEP_DELAY_US = 300;  // clamp to avoid squeal/stall
 
 // How often to refresh the OLED during GO-TO (ms). Lower = smoother but slower.
 const uint16_t MOVING_UI_REFRESH_MS = 100;
@@ -388,7 +393,9 @@ void moveToTarget(long tgt) {
     }
 
     doStep();
-    delayMicroseconds(MOVE_STEP_DELAY_US);
+    uint16_t stepDelay = MOVE_STEP_DELAY_US;
+    if (stepDelay < MIN_MOVE_STEP_DELAY_US) stepDelay = MIN_MOVE_STEP_DELAY_US;
+    delayMicroseconds(stepDelay);
 
     // Refresh UI occasionally (NOT every step)
     uint32_t now = millis();
