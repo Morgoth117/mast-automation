@@ -17,6 +17,7 @@ U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 const float MM_PER_STEP = 0.01;   // TR8x2 lead screw, full step (2mm / 200 = 0.01mm)
 volatile long stepPosition = 0;
 volatile int lastEncA = 0;
+volatile uint32_t lastEncChangeUs = 0;
 
 bool enabled = false;
 
@@ -44,8 +45,8 @@ inline void doStep() {
 }
 
 // Go-to speed control: smaller = faster (but clamped for reliability)
-const uint16_t MOVE_STEP_DELAY_US = 800;  // slow, known-good
-const uint16_t MIN_MOVE_STEP_DELAY_US = 300;  // clamp to avoid squeal/stall
+const uint16_t MOVE_STEP_DELAY_US = 1000;  // slow, known-good
+const uint16_t MIN_MOVE_STEP_DELAY_US = 400;  // clamp to avoid squeal/stall
 
 // How often to refresh the OLED during GO-TO (ms). Lower = smoother but slower.
 const uint16_t MOVING_UI_REFRESH_MS = 100;
