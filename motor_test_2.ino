@@ -8,6 +8,7 @@ U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 // ----- Pins -----
 #define STEP_PIN 8
 #define DIR_PIN  9
+#define EN_PIN   10
 
 #define ENC_A 2
 #define ENC_B 3
@@ -42,6 +43,11 @@ inline void doStep() {
   delayMicroseconds(STEP_PULSE_HIGH_US);
   digitalWrite(STEP_PIN, LOW);
   delayMicroseconds(STEP_PULSE_LOW_US);
+}
+
+void setDriverEnabled(bool isEnabled) {
+  enabled = isEnabled;
+  digitalWrite(EN_PIN, enabled ? LOW : HIGH);
 }
 
 // Go-to speed control: smaller = faster (but clamped for reliability)
@@ -419,6 +425,7 @@ void moveToTarget(long tgt) {
 void setup() {
   pinMode(STEP_PIN, OUTPUT);
   pinMode(DIR_PIN, OUTPUT);
+  pinMode(EN_PIN, OUTPUT);
 
   pinMode(ENC_A, INPUT_PULLUP);
   pinMode(ENC_B, INPUT_PULLUP);
@@ -430,6 +437,7 @@ void setup() {
   u8g2.setFont(u8g2_font_6x10_tf);
 
   lastEncA = digitalRead(ENC_A);
+  setDriverEnabled(false);
 
   // Restore last-known position (if available)
   long p;
@@ -507,7 +515,7 @@ void loop() {
   // SHORT PRESS actions
   if (shortPress) {
     if (mode == MODE_RUN) {
-      enabled = !enabled;
+      setDriverEnabled(!enabled);
     } else if (mode == MODE_MENU) {
       switch (menuIndex) {
         case 0: // Resume
